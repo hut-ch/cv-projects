@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import requests
 import json
 
-load_dotenv('project.env')
+load_dotenv('../project.env')
 
 file_location = os.getenv('download_folder')
 file_type = 'json'
