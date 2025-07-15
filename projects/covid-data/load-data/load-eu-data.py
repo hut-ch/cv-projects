@@ -5,9 +5,17 @@ import json
 
 load_dotenv('../project.env')
 
-file_location = os.getenv('download_folder')
+# Create local directory if needed
+file_dir = os.getenv('download_folder')
+os.makedirs(file_dir, exist_ok=True)
+
+# for future use to customise the file type being downloaded
 file_type = 'json'
-url_base = 'https://opendata.ecdc.europa.eu/covid19/'
+
+# Base URL for the  data
+base_url = 'https://opendata.ecdc.europa.eu/covid19/'
+
+# List of endpoint paths to fetch data from
 endpoint_list = [
     'COVID-19_VC_data_from_September_2023/json/data_v7.json', 
     'vaccine_tracker/json/',
@@ -18,13 +26,23 @@ endpoint_list = [
     'nationalcasedeath_eueea_daily_ei/json/'
 ]
 
+# Download each dataset
 for endpoint in endpoint_list:
-    url = url_base+endpoint
-    filename = endpoint.split('/')[0].replace('_','-').lower() + '.json'
-   
-    r = requests.get(url)
+    url = f"{base_url}{endpoint}"
     
-    if r.ok == True:
-        with open(file_location+filename, 'w') as f:
-            f.write(r.text)
-            print(f'{filename} saved')
+    # Generate filename
+    base_part = endpoint.strip('/').split('/')[0].replace('_', '-').lower()
+    filename = os.path.join(file_dir, f"{base_part}.json")
+
+    print(f"Fetching: {url}")
+    print(f"Saving as: {filename}")
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raises HTTPError for bad responses (4xx/5xx)
+
+        with open(filename, 'w', encoding='utf-8') as file:
+            file.write(response.text)
+
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to fetch {url}: {e}")
